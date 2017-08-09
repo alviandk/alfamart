@@ -1,0 +1,194 @@
+# import json
+from datetime import date
+#
+#
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+from django.core.urlresolvers import reverse
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
+from django.views.generic import View
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.db.models import Q
+from django.db.models import Sum
+
+from .form import *
+
+from silk.profiling.profiler import silk_profile
+
+
+class InsideView(View):
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super(InsideView, self).dispatch(request, *args, **kwargs)
+
+@silk_profile(name='Login View')
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(username=username,password=password)
+        if user is not None:
+            if user.is_active:
+                login(request,user)
+                return HttpResponseRedirect(reverse('home'))
+            else:
+                #redirect to disable account msg
+                messages.error(request,'Ah, account anda tidak aktif :(')
+                return HttpResponseRedirect(reverse('login'))
+        else:
+            #invalid login
+            messages.error(request,'Tetot, coba lagi!')
+            return HttpResponseRedirect(reverse('login'))
+
+    return render(request, 'login.html')
+
+
+class BarangInputView(InsideView, View):
+    template_name = 'barang/input-barang.html'
+
+    @silk_profile(name='Input Barang View Get')
+    def get(self,request):
+
+        form = BarangForm()
+        return render(request,self.template_name,{'form':form})
+
+    @silk_profile(name='Input Barang View Post')
+    def post(self,request):
+        form = BarangForm(request.POST or None)
+        if form.is_valid():
+            input_barang = form.save(commit=False)
+            input_barang.save()
+
+            messages.success(request,'Barang telah selesai diinput')
+            # return HttpResponseRedirect(reverse('all-barang'))
+        else:
+            messages.error(request,'Terjadi error, coba lagi')
+        return render(request,self.template_name,{'form':form})
+
+class BarangAllView(InsideView,View):
+    template_name = 'barang/all-barang.html'
+
+    @silk_profile(name='List All Barang View')
+    def get(self,request):
+        barang = Barang.objects.all()
+        return render(request,self.template_name,{'barang':barang})
+
+
+
+class PerusahaanInputView(InsideView,View):
+    template_name = 'perusahaan/input-perusahaan.html'
+    @silk_profile(name='PerusahaanInputView Get')
+    def get(self,request):
+        form = PerusahaanForm()
+        return render(request,self.template_name,{'form':form})
+
+    def post(self,request):
+        form = PerusahaanForm(request.POST or None)
+        if form.is_valid():
+            input_perusahaan = form.save(commit=False)
+            input_perusahaan.save()
+
+            messages.success(request,'Data Perusahaan telah selesai diinput')
+            # return HttpResponseRedirect(reverse('all-perusahaan'))
+        else:
+            messages.error(request,'Terjadi error, coba lagi')
+        return render(request,self.template_name,{'form':form})
+
+
+class StokInputView(InsideView,View):
+    template_name = 'stok/input-stok.html'
+    def get(self,request):
+        form = StokForm()
+        return render(request,self.template_name,{'form':form})
+
+    def post(self,request):
+        form = StokForm(request.POST or None)
+        if form.is_valid():
+            input_stok = form.save(commit=False)
+            input_stok.save()
+
+            messages.success(request,'Stok telah selesai diinput')
+            # return HttpResponseRedirect(reverse('all-stok'))
+        else:
+            messages.error(request,'Terjadi error, coba lagi')
+        return render(request,self.template_name,{'form':form})
+
+
+class TransaksiView(InsideView,View):
+	template_name='transaksi/transaksi.html'
+	@silk_profile(name='Transaksi Get')
+	def get(self,request):
+
+
+		return render(request,self.template_name)
+
+	@silk_profile(name='Transaksi Post')
+	def post(self,request):
+		form = DetailTransaksiForm(request.POST or None)
+		kasir = Kasir.objects.get(user=request.user.id)
+		if form.is_valid():
+			transaksi=form.save(commit=False)
+			transaksi.nama_kasir=kasir
+			sekarang=date.today()
+			sekarang=sekarang.isoformat()
+			transaksi.tanggal_transaksi=sekarang
+
+			transaksi.save()
+
+		return HttpResponseRedirect(reverse('transaksi-mulai', kwargs={'id': transaksi.id}))
+
+class TransaksiMulaiView(InsideView,View):
+	template_name='transaksi/transaksi-mulai.html'
+	id = None
+
+	@silk_profile(name='Transaksi Start Get')
+	def get(self, request, id):
+		transaksi = DetailTransaksi.objects.get(id=id)
+
+		form=MulaiDetailTransaksiForm(instance=transaksi,initial={'id':transaksi.id,})
+		form_ajax=TransaksiAjaxForm()
+		barang=BarangTransaksi.objects.filter(detail=transaksi)
+		sekarang=date.today()
+		diskon=Diskon.objects.filter(Q(tanggal_mulai_promo__lte=sekarang) & Q(tanggal_selesai_diskon__gt=sekarang))
+		return render(request,self.template_name,{'transaksi':transaksi,'form':form,'barang':barang,'form_ajax':form_ajax,'diskon':diskon})
+
+	@silk_profile(name='Transaksi Start Post')
+	def post(self,request,id=None):
+		transaksi = DetailTransaksi.objects.get(id=id)
+		form = MulaiDetailTransaksiForm(request.POST,instance=transaksi)
+		form_ajax = TransaksiAjaxForm(request.POST or None)
+
+		if form.is_valid():
+			transaksi_form=form.save(commit=False)
+			customer=form.cleaned_data['customer']
+			custom=Customer.objects.get(id=customer)
+			transaksi_form.customer=custom
+			transaksi_form.save()
+		elif form_ajax.is_valid():
+			sekarang=date.today()
+			diskon=Diskon.objects.filter(Q(tanggal_mulai_promo__lte=sekarang) & Q(tanggal_selesai_diskon__gt=sekarang) )
+			transaksi_barang = form_ajax.save(commit=False)
+			try:
+			    Diskon.objects.get(nama_barang=transaksi_barang.barang)
+			    disk= Diskon.objects.get(nama_barang=transaksi_barang.barang)
+			except:
+			    pass
+
+			transaksi_barang.detail=transaksi
+			if transaksi_barang.barang:
+
+			    try:
+			        Diskon.objects.get(nama_barang=transaksi_barang.barang)
+			        disk= Diskon.objects.get(nama_barang=transaksi_barang.barang)
+			        total=form_ajax.cleaned_data['jumlah_barang']*transaksi_barang.barang.harga_jual
+			        transaksi_barang.total_harga=total-total*disk.diskon/100
+			    except:
+			        transaksi_barang.total_harga=form_ajax.cleaned_data['jumlah_barang']*transaksi_barang.barang.harga_jual
+
+				transaksi_barang.save()
+			messages.success(request,'Barang telah selesai diinput')
+
+		return HttpResponseRedirect(reverse('transaksi-mulai', kwargs={'id': transaksi.id}))

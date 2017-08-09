@@ -1,0 +1,34 @@
+{% extends "main.html" %}
+{% block main %}
+{% load staticfiles %}
+    <!-- Page Heading -->
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h1 class="page-header">
+                            Input Barang <!--<small>Statistics Overview</small>-->
+                        </h1>
+                        <ol class="breadcrumb">
+                            <li  class="active">
+                                <i class="fa fa-home"></i> <a href="{# url 'home' %}">Home</a>
+                            </li>
+                            <li>
+                                <i class="fa fa-user"></i> Menu
+                            </li>
+                            <li>
+                                <i class="fa fa-user"></i> Input Barang
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+			<!-- /.row -->
+    <div class="row">
+        <div class="col-lg-6">
+        <form action="{% url 'input-barang' %}" method="post" class="form" role="form">{% csrf_token %}
+        {{ form.as_p }}
+        <p>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </p>
+    </form>       </div>
+    </div>
+{% endblock %}

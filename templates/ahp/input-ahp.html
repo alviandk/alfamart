@@ -1,0 +1,61 @@
+{% extends "main.html" %}
+{% block main %}
+{% load staticfiles %}
+    <!-- Page Heading -->
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h1 class="page-header">
+                           Input Nilai Alternatif AHP <!--<small>Statistics Overview</small>-->
+                        </h1>
+                        <ol class="breadcrumb">
+                            <li  class="active">
+                                <i class="fa fa-home"></i> <a href="{% url 'home' %}">Home</a>
+                            </li>
+                            <li>
+                                <i class="fa fa-user"></i> Menu
+                            </li>
+                            <li>
+                                <i class="fa fa-user"></i> Input AHP
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+			<!-- /.row -->
+    <div class="row">
+        <div class="col-lg-6">
+        <form action="{% url 'input-ahp' ahp.id %}" method="post" class="form" role="form">
+            {% csrf_token %}
+			<h4><strong> Umur (Tahun)</strong> </h4>
+			<br>
+		    <label>Bapak a</label>
+                    <div> {{ form.umur_a }}</div>
+            <label>Bapak b</label>
+                    <div> {{ form.umur_b }}</div>
+		    <label>Bapak c</label>
+                    <div> {{ form.umur_c }}</div> 
+			<br>
+			<h4><strong> Gaji (Ratusan Ribu Rupiah)</strong> </h4>
+			<br>
+            <label>Bapak a</label>
+                    <div> {{ form.gaji_a }}</div>
+		    <label>Bapak b</label>
+                    <div> {{ form.gaji_b }}</div>
+		    <label>Bapak c</label>
+                    <div> {{ form.gaji_c }}</div>
+			<br> 
+			<h4><strong> Luas Rumah (m<sup>2</sup>)</strong> </h4>
+			<br>
+		    <label>Bapak a</label>
+                    <div> {{ form.luas_rumah_a }}</div>  
+		    <label>Bapak b</label>
+                    <div> {{ form.luas_rumah_b }}</div>  
+		    <label>Bapak c</label>
+                    <div> {{ form.luas_rumah_c }}</div>
+			<br>             
+        <p>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </p>
+    </form>       </div>
+    </div>
+{% endblock %}

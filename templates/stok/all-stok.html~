@@ -1,0 +1,72 @@
+{% extends "main.html" %}
+{% block main %}
+{% load staticfiles %}
+    <!-- Page Heading -->
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h1 class="page-header">
+                            Daftar Stok <!--<small>Statistics Overview</small>-->
+                        </h1>
+                        <ol class="breadcrumb">
+                            <li  class="active">
+                                <i class="fa fa-home"></i> <a href="{% url 'home' %}">Menu</a>
+                            </li>
+                          
+                            <li>
+                                <i class="fa fa-user"></i> Daftar Stok
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+			<!-- /.row -->
+    <div class="row">
+        <div class="col-lg-12">
+              <div class="table-responsive">
+                      {% if stok %}
+                            
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Nama Barang</th>
+                                        <th>Kategori</th>
+                                        <th>Satuan</th>
+                                        <th>Jumlah</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+				{% for stok in stok %}
+                                    <tr>
+                                        <td>
+				  {% for group in user.groups.all %}
+		             		{% if not group.name == 'manager'  %}
+						<a href="{% url 'edit-stok' stok.id %}">{{ stok.nama_barang }}</a>
+					{% else %}
+							{{ stok.nama_barang }}
+						
+					{% endif %}
+				{% endfor %}
+
+					</td>
+                                        <td>{{ stok.kategori }}</td>
+                                        <td>{{ stok.satuan }}</td>
+                                        <td>{{ stok.jumlah }}</td>
+                                    </tr>
+                             {% endfor %}
+				</tbody>
+                            </table>
+
+                            {% else %}
+                                <strong>No stok inputted yet.</strong>
+                            {% endif %}
+		  {% for group in user.groups.all %}
+             		{% if not group.name == 'manager'  %}
+			 <a href="{% url 'input-stok' %}"><button> Input Stok </button></a>
+			{% endif %}
+		{% endfor %}                                
+                        </div>
+
+        </div>
+    </div>
+
+{% endblock %}

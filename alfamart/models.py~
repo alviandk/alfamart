@@ -1,0 +1,55 @@
+from django.db import models
+from django.contrib.auth.models import User
+from time import  strftime
+
+# Create your models here.
+class Perusahaan(models.Model):
+    kode_perusahaan=models.CharField(max_length=5)
+    nama_perusahaan=models.CharField(max_length=20)
+    alamat=models.CharField(max_length=20)
+    kota=models.CharField(max_length=10)
+    kode_pos=models.CharField(max_length=5,blank=True,null=True)
+    no_telepon=models.CharField(max_length=15)
+    email=models.EmailField(max_length=20)
+    logo=models.ImageField(null=True,blank=True)
+	
+    def __str__(self):
+	return self.nama_perusahaan
+
+
+
+class Barang(models.Model):
+    kode_barang=models.CharField(max_length=6)
+    nama_barang=models.CharField(max_length=20)
+    harga_beli=models.IntegerField(max_length=6)
+    harga_jual=models.IntegerField(max_length=6)
+    perusahaan=models.ForeignKey(Perusahaan,related_name='asal')
+    def __str__(self):
+	return self.nama_barang
+
+
+class Stok(models.Model):
+    nama_barang=models.ForeignKey(Barang,related_name='barang_stok')
+    kategori=models.CharField(max_length=10)
+    satuan=models.CharField(max_length=5)
+    jumlah=models.IntegerField(max_length=5)
+
+class Kasir(models.Model):
+    nama = models.CharField(max_length=30)
+    def __str__(self):
+	return self.nama
+
+
+class Transaksi(models.Model):
+    nama_barang=models.ForeignKey(Barang,related_name='barang_transaksi')
+    tanggal_transaksi=models.DateTimeField(auto_now_add=True,null=True,blank=True)
+    nama_kasir=models.ForeignKey(Kasir,related_name='nama_kasir')
+    jumlah_barang=models.IntegerField()
+
+    
+
+class Diskon(models.Model):
+    nama_barang=models.ForeignKey(Barang,related_name='barang_diskon')
+    diskon=models.IntegerField()
+    tanggal_mulai_promo=models.DateField(null=True,blank=True)
+    tanggal_selesai_diskon=models.DateField(null=True,blank=True)

@@ -1,0 +1,40 @@
+{% extends "main.html" %}
+{% block main %}
+{% load staticfiles %}
+    <!-- Page Heading -->
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h1 class="page-header">
+                            Menu <!--<small>Statistics Overview</small>-->
+                        </h1>
+                    </div>
+                </div>
+			<!-- /.row -->
+    <div class="row">
+        <div class="col-lg-12">
+            <ul >
+	  {% for group in user.groups.all %}
+             {% if group.name == 'manager' %}
+				<li>
+					<a href="{% url 'all-perusahaan'  %}">Daftar Perusahaan</a>
+				</li>
+		   
+             {% elif not group.name == 'kasir'  %}
+				<li>
+					<a href="{% url 'all-barang'  %}">Daftar Barang</a>
+				</li>
+				<li>
+					<a href="{% url 'all-stok'  %}"> Daftar Stok</a>
+				</li>	
+		   
+             {% elif group.name == 'kasir' or group.name == 'manager'  %}
+				<li>
+					<a href="{% url 'transaksi'  %}"> Transaksi</a>
+				</li>
+		   {% endif %}
+           {% endfor %}
+			</ul>
+        </div>
+    </div>
+{% endblock %}
